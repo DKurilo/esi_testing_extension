@@ -5,14 +5,23 @@ const _appendBuffer = (buffer1, buffer2) => {
   return tmp.buffer;
 };
 
-const scriptsToLaunch = [];
-let contentType = null;
+const requestsInfo = {};
+
+const getRequestInfo = (tabid) => {
+  if (!requestsInfo[tabid]) {
+    requestsInfo[tabid] = {
+      contentType: '',
+      scriptsToLaunch: []
+    }
+  }
+  return requestsInfo[tabid];
+}
 
 chrome.webRequest.onHeadersReceived.addListener(
   details => {
     for (let i = 0; i < details.responseHeaders.length; i++){
       if (details.responseHeaders[i].name.toLowerCase() === 'content-type') {
-        contentType = details.responseHeaders[i].value.toLowerCase();
+        getRequestInfo(details.tabId).contentType = details.responseHeaders[i].value.toLowerCase();
       }
     }
   },
@@ -34,7 +43,8 @@ chrome.webRequest.onBeforeRequest.addListener(
     }
 
     filter.onstop = event => {
-      if (contentType && contentType.indexOf('text') < 0) {
+      if (getRequestInfo(details.tabId).contentType.indexOf('text') < 0) {
+        requestsInfo[details.tabId] = undefined;
         filter.write(docStream);
         filter.disconnect();
         return;
@@ -54,7 +64,7 @@ chrome.webRequest.onBeforeRequest.addListener(
           if (xhr.status === 200) {
             const headers = xhr.getAllResponseHeaders().replace(/\\/ig, '\\\\').replace(/"/ig, '\\\"').split(/[\r\n]+/).join('\\n');
             const script = 'console.log(\"ESI fragment:\\n ' + e.replace(/\\/ig, '\\\\').replace(/"/ig, '\\\"') + '\\nHeaders:\\n' + headers + '\");';
-            scriptsToLaunch.push(script);
+            getRequestInfo(details.tabId).scriptsToLaunch.push(script);
             const docarr = doc.split(e);
             doc = docarr.join(xhr.responseText);
           }
@@ -82,13 +92,19 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
 
 
 chrome.webNavigation.onDOMContentLoaded.addListener(details => {
-  if (details.frameId !== 0 || (contentType && contentType.indexOf('text') < 0)) {
+  if (details.frameId !== 0) {
     return;
   }
-  browser.tabs.query({active: true, windowId: browser.windows.WINDOW_ID_CURRENT}).then(tabInfo => {
+  if (getRequestInfo(details.tabId).contentType.indexOf('text') < 0) {
+    requestsInfo[details.tabId] = undefined;
+    return;
+  }
+  browser.tabs.get(details.tabId).then(tabInfo => {
     browser.tabs.executeScript(tabInfo.id, {
-      code: scriptsToLaunch.join('\n'),
+      code: getRequestInfo(details.tabId).scriptsToLaunch.join('\n'),
       runAt: "document_start"
+    }).then(() => {
+      requestsInfo[details.tabId] = undefined;
     });
   });
 });
