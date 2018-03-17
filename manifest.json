@@ -1,9 +1,9 @@
 {
   "name": "ESI testing extension",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "manifest_version": 2,
   "description": "Extension allows to debug ESI sites",
-  "homepage_url": "https://github.com/DKurilo/esi-chrome-extension",
+  "homepage_url": "https://github.com/DKurilo/esi_testing_extension",
   "applications": {
     "gecko": {
       "id": "esi-testing-extension@kurilo.us"
