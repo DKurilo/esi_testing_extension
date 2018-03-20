@@ -16,3 +16,5 @@ https://www.w3.org/TR/esi-lang
 Author: Dima Kurilo <dkurilo@gmail.com>  
 Site: https://www.kurilo.us/  
 GitHub: https://github.com/DKurilo/esi-testing-extension  
+Extension page: https://addons.mozilla.org/en-US/firefox/addon/esi-testing-extension/?src=userprofile  
+Minimal Firefox version: 57.0  

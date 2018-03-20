@@ -1,12 +1,13 @@
 {
   "name": "ESI testing extension",
-  "version": "1.0.3",
+  "version": "1.0.6",
   "manifest_version": 2,
   "description": "Extension allows to debug ESI sites",
   "homepage_url": "https://github.com/DKurilo/esi_testing_extension",
   "applications": {
     "gecko": {
-      "id": "esi-testing-extension@kurilo.us"
+      "id": "esi-testing-extension@kurilo.us",
+      "strict_min_version": "57.0"
     }
   },
   "icons": {
@@ -15,10 +16,19 @@
     "128": "icons/icon128.png"
   },
   "background": {
-    "scripts": ["src/bg/background.js"]
+    "scripts": ["src/classes/prefixes.js", "src/bg/background.js"]
+  },
+  "options_ui": {
+    "page": "src/options/options.html",
+    "browser_style": true
+  },
+  "browser_action": {
+    "default_icon": "icons/icon48.png",
+    "default_title": "Site settings",
+    "default_popup": "src/popup/popup.html"
   },
   "default_locale": "en",
   "permissions": [
-    "activeTab","<all_urls>","webRequest","webRequestBlocking","webNavigation"
+    "activeTab","<all_urls>","webRequest","webRequestBlocking","webNavigation","storage"
   ]
 }

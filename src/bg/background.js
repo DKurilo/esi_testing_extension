@@ -7,6 +7,8 @@ const _appendBuffer = (buffer1, buffer2) => {
 
 const requestsInfo = {};
 
+this.prefixes = new Prefixes();
+
 const getRequestInfo = (tabid) => {
   if (!requestsInfo[tabid]) {
     requestsInfo[tabid] = {
@@ -83,7 +85,8 @@ chrome.webRequest.onBeforeRequest.addListener(
 
 chrome.webRequest.onBeforeSendHeaders.addListener(
   details => {
-    details.requestHeaders.push({name:"Surrogate-Capability",value:'abc-ESI/1.0'});
+    const prefix = this.prefixes.getPrefix(details.url);
+    details.requestHeaders.push({name:"Surrogate-Capability",value: ((prefix ? (prefix + '-') : '') + 'ESI/1.0')});
     return {requestHeaders: details.requestHeaders};
   },
   {urls: ["<all_urls>"]},
@@ -96,7 +99,7 @@ chrome.webNavigation.onDOMContentLoaded.addListener(details => {
     return;
   }
   if (getRequestInfo(details.tabId).contentType.indexOf('text') < 0) {
-    requestsInfo[details.tabId] = undefined;
+    delete requestsInfo[details.tabId];
     return;
   }
   browser.tabs.get(details.tabId).then(tabInfo => {
@@ -104,7 +107,7 @@ chrome.webNavigation.onDOMContentLoaded.addListener(details => {
       code: getRequestInfo(details.tabId).scriptsToLaunch.join('\n'),
       runAt: "document_start"
     }).then(() => {
-      requestsInfo[details.tabId] = undefined;
+      delete requestsInfo[details.tabId];
     });
   });
 });
