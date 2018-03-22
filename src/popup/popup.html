@@ -6,9 +6,12 @@
   </head>
 <body>
   <form>
-    <label for="prefix">Prefix for <span id="domain"></span></label><br/>
+    <br/>
+    <input type="button" value="Stop plugin" id="turnoffon" /><br/><br/>
+    <label for="prefix">Prefix for: <span id="domain"></span></label><br/>
     <input id="prefix" name="prefix" type="text" /><br/>
-    <input type="submit" value="Set" />
+    <input type="submit" value="Set header prefix" /><br/>
+    <input type="button" value="Remove header prefix" id="remove" /><br/><br/>
   </form>
   <script src="popup.js"></script>
 </body>

@@ -1,6 +1,7 @@
 html, body {
   width: 200px;
   font: 12px/18px Arial, sans-serif;
+  text-align: center;
 }
 
 input {

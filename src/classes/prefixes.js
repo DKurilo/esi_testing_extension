@@ -4,6 +4,7 @@ function Prefixes() {
   this.ready = false;
 
   this.loading = this.storage.get(null).then(data => {
+    delete data['!status!'];
     this.storage_cache = data;
     this.ready = true;
   });

@@ -1,6 +1,7 @@
 {
   "name": "ESI testing extension",
-  "version": "1.0.6",
+  "author": "Dima Kurilo <dkurilo@gmail.com>",
+  "version": "1.1.0",
   "manifest_version": 2,
   "description": "Extension allows to debug ESI sites",
   "homepage_url": "https://github.com/DKurilo/esi_testing_extension",
