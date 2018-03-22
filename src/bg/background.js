@@ -10,8 +10,8 @@ const requestsInfo = {};
 let status = 'on';
 
 const storage = browser.storage.local;
-storage.get('!status!').then(data => {
-  if (data === 'off') {
+storage.get('!STATUS!').then(data => {
+  if (data['!STATUS!'] === 'off') {
     this.stop();
   }
 });
@@ -24,7 +24,7 @@ this.stop = () => {
     path: "icons/icon48-off.png"
   });
   return storage.set({
-    '!status!': 'off'
+    '!STATUS!': 'off'
   });
 };
 
@@ -34,7 +34,7 @@ this.start = () => {
     path: "icons/icon48.png"
   });
   return storage.set({
-    '!status!': 'on'
+    '!STATUS!': 'on'
   });
 };
 

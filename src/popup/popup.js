@@ -28,11 +28,13 @@ chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
   document.querySelector('#turnoffon').addEventListener('click', (e) => {
     const status = document.querySelector("#turnoffon").value;
     if (status === 'Stop plugin') {
-      bgPage.stop();
-      document.querySelector("#turnoffon").value = 'Start plugin';
+      bgPage.stop().then(() => {
+        document.querySelector("#turnoffon").value = 'Start plugin';
+      });
     } else {
-      bgPage.start();
-      document.querySelector("#turnoffon").value = 'Stop plugin';
+      bgPage.start().then(() => {
+        document.querySelector("#turnoffon").value = 'Stop plugin';
+      });
     }
     e.preventDefault();
   });
