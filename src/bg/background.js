@@ -40,11 +40,47 @@ this.start = () => {
 
 this.getStatus = () => status;
 
+this.getInfo = tabid => getPopupFromInfo(getRequestInfo(tabid));
+
+const getScriptFromInfo = info => {
+  if (info.fragments.length <= 0) {
+    return undefined;
+  }
+  const scriptArr = info.fragments.map(e => {
+    const headers = e.headers.replace(/\\/ig, '\\\\').replace(/"/ig, '\\\"').split(/[\r\n]+/).join('\\n');
+    const script = 'console.log(\"ESI fragment:\\n ' + 
+                   e.fragment.replace(/\\/ig, '\\\\').replace(/"/ig, '\\\"') + 
+                   '\\nStatus: %c' + e.status + 
+                   '%c\\nHeaders:\\n' + headers + '\", \"' + (e.status === 200 ? '' : 'color:red;') + '\", \"\");';
+    return script;
+  });
+  return scriptArr.join('\n');
+};
+
+const encodeHtml = html => html.replace(/&/ig, '&amp;').replace(/>/ig, '&gt;').replace(/</ig, '&lt;');
+const wrapLink = h => h.replace(/(http.*)/, '<a href="$1">$1</a>');
+
+const getPopupFromInfo = info => {
+  if (info.fragments.length <= 0) {
+    return undefined;
+  }
+  const htmlArr = info.fragments.map(e => {
+    const headers = e.headers.split(/[\r\n]+/).map(h => wrapLink(h)).join('<br/>');
+    const html = 'ESI fragment:<br/> ' + 
+                 encodeHtml(e.fragment).replace(/src="([^"]*)/,'src="<a href="' + e.src + '">$1</a>') +
+                 '<br/>Status: ' + 
+                 (e.status === 200 ? e.status : `<span class="err">${e.status}</span>`) + 
+                 '<br/>Headers:<br/>' + headers;
+    return html;
+  });
+  return '<p>' + htmlArr.join('</p><p>') + '</p>';
+}
+
 const getRequestInfo = (tabid) => {
   if (!requestsInfo[tabid]) {
     requestsInfo[tabid] = {
       contentType: '',
-      scriptsToLaunch: []
+      fragments: [],
     }
   }
   return requestsInfo[tabid];
@@ -70,9 +106,14 @@ chrome.webRequest.onBeforeRequest.addListener(
     if (status === 'off') {
       return;
     }
+
+    if (requestsInfo[details.tabId]) {
+      delete requestsInfo[details.tabId];
+    }
+
     browser.browserAction.setIcon({
       path: "icons/icon48.png",
-      tabId: details.tabId
+      tabId: details.tabId,
     });
     const filter = browser.webRequest.filterResponseData(details.requestId);
     const domainPart = details.url.replace(/([^\/]*\/\/[^\/]*).*/ig, '$1');
@@ -87,7 +128,6 @@ chrome.webRequest.onBeforeRequest.addListener(
 
     filter.onstop = event => {
       if (getRequestInfo(details.tabId).contentType.indexOf('text') < 0) {
-        requestsInfo[details.tabId] = undefined;
         filter.write(docStream);
         filter.disconnect();
         return;
@@ -96,9 +136,12 @@ chrome.webRequest.onBeforeRequest.addListener(
       const re = /<esi:[^>]*>/ig;
       const found = doc.match(re);
       if (found !== null && found.length > 0) {
+        browser.browserAction.setIcon({
+          path: "icons/icon48-esi.png",
+          tabId: details.tabId
+        });
         found.forEach(e => {
           const lcE = e.toLowerCase();
-          console.log(lcE);
           if (lcE.indexOf('<esi:include') === 0) {
             let src = e.replace(/.*src="([^"]*)".*/i, "$1");
             if (src.indexOf('://') <= 0) {
@@ -108,9 +151,12 @@ chrome.webRequest.onBeforeRequest.addListener(
             xhr.open("GET", src, false);
             xhr.send(null);
 
-            const headers = xhr.getAllResponseHeaders().replace(/\\/ig, '\\\\').replace(/"/ig, '\\\"').split(/[\r\n]+/).join('\\n');
-            const script = 'console.log(\"ESI fragment:\\n ' + e.replace(/\\/ig, '\\\\').replace(/"/ig, '\\\"') + '\\nStatus: ' + xhr.status + '\\nHeaders:\\n' + headers + '\");';
-            getRequestInfo(details.tabId).scriptsToLaunch.push(script);
+            getRequestInfo(details.tabId).fragments.push({
+              fragment: e,
+              src: src,
+              status: xhr.status,
+              headers: xhr.getAllResponseHeaders(),
+            });
 
             const docarr = doc.split(e);
             if (xhr.status === 200) {
@@ -130,6 +176,13 @@ chrome.webRequest.onBeforeRequest.addListener(
             doc = docarr.join('');
           }
         });
+      }
+      const docarr = doc.split('<!--esi');
+      if (docarr.length > 1) {
+        for (let i = 0; i < docarr.length; i++) {
+          docarr[i] = docarr[i].replace(/-->/, '');
+        }
+        doc = docarr.join('');
       }
       const stream = encoder.encode(doc);
       filter.write(stream);
@@ -168,11 +221,20 @@ chrome.webNavigation.onDOMContentLoaded.addListener(details => {
     return;
   }
   browser.tabs.get(details.tabId).then(tabInfo => {
-    browser.tabs.executeScript(tabInfo.id, {
-      code: getRequestInfo(details.tabId).scriptsToLaunch.join('\n'),
-      runAt: "document_start"
-    }).then(() => {
-      delete requestsInfo[details.tabId];
-    });
+    const script = getScriptFromInfo(getRequestInfo(details.tabId));
+    if (script) {
+      browser.tabs.executeScript(tabInfo.id, {
+        code: script,
+        runAt: "document_start"
+      }).then(() => {
+      });      
+    }
   });
 });
+
+browser.tabs.onRemoved.addListener(details => {
+  if (requestsInfo[details.tabId]) {
+    delete requestsInfo[details.tabId];
+  }
+});
+

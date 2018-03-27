@@ -1,9 +1,31 @@
 html, body {
-  width: 200px;
+  width: 440px;
   font: 12px/18px Arial, sans-serif;
   text-align: center;
 }
 
 input {
-  width: 180px;
+  width: 400px;
+}
+
+#toggle-info {
+  color: #0000ff;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+#info {
+  text-align: left;
+}
+
+.hide {
+  display: none;
+}
+
+.show {
+  display: block;
+}
+
+.err{
+  color: #ff0000;
 }
