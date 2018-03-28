@@ -66,11 +66,11 @@ const getPopupFromInfo = info => {
   }
   const htmlArr = info.fragments.map(e => {
     const headers = e.headers.split(/[\r\n]+/).map(h => wrapLink(h)).join('<br/>');
-    const html = 'ESI fragment:<br/> ' + 
+    const html = '<h2>ESI fragment:</h2>' + 
                  encodeHtml(e.fragment).replace(/src="([^"]*)/,'src="<a href="' + e.src + '">$1</a>') +
-                 '<br/>Status: ' + 
-                 (e.status === 200 ? e.status : `<span class="err">${e.status}</span>`) + 
-                 '<br/>Headers:<br/>' + headers;
+                 '<br/><b>Status: ' + 
+                 (e.status === 200 ? e.status : `<span class="err">${e.status}</span>`) + '</b>' +
+                 '<h3>Headers:</h3>' + headers;
     return html;
   });
   return '<p>' + htmlArr.join('</p><p>') + '</p>';
