@@ -2,18 +2,35 @@ const prefixes = chrome.extension.getBackgroundPage().prefixes;
 
 const load = () => {
   let counter = 0;
-  document.querySelector("#settings").innerHTML = 
-    '<span class="domain">Domain</span> \
-    <span class="prefix">Prefix</span><br/>';
+  const settings = document.querySelector("#settings");
+  while(settings.firstChild){
+    settings.removeChild(settings.firstChild);
+  }
+  let el = settings.appendChild(document.createElement('span'));
+  el.innerText = 'Domain';
+  el.classList='domain';
+  el = settings.appendChild(document.createElement('span'));
+  el.innerText = 'Prefix';
+  el.classList='prefix';
+  settings.appendChild(document.createElement('br'));
   //TODO: add Promise processing
   Object.entries(prefixes.getAllPrefixes()).forEach((el) => {
     const [domain, prefix] = el;
-    const escapedDomain = escape(domain);
-    const escapedPrefix = escape(prefix).replace(/"/ig, '$quote;');
-    document.querySelector("#settings").innerHTML += 
-      `<label class="domain" for="i${counter}">${escapedDomain}</label> \
-      <input class="prefix" id="i${counter}" type="text" value="${escapedPrefix}"/> \
-      <span class="remove" id="r${counter}">Remove</span><br/>`;
+    el = settings.appendChild(document.createElement('label'));
+    el.innerText = domain;
+    el.classList='domain';
+    el.setAttribute('for', 'i' + counter);
+    el = settings.appendChild(document.createElement('input'));
+    el.classList='prefix';
+    el.setAttribute('id', 'i' + counter);
+    el.setAttribute('type', 'text');
+    el.setAttribute('value', prefix);
+    el = settings.appendChild(document.createElement('span'));
+    el.innerText = 'Remove';
+    el.classList='remove';
+    el.setAttribute('id', 'r' + counter);
+    el.setAttribute('type', 'text');
+    settings.appendChild(document.createElement('br'));
     let id = 'i' + counter;
     document.querySelector('#' + id).addEventListener('change', () => {
       save(id, domain);

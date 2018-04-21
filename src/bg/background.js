@@ -64,16 +64,42 @@ const getPopupFromInfo = info => {
   if (info.fragments.length <= 0) {
     return undefined;
   }
-  const htmlArr = info.fragments.map(e => {
-    const headers = e.headers.split(/[\r\n]+/).map(h => wrapLink(h)).join('<br/>');
-    const html = '<h2>ESI fragment:</h2>' + 
-                 encodeHtml(e.fragment).replace(/src="([^"]*)/,'src="<a href="' + e.src + '">$1</a>') +
-                 '<br/><b>Status: ' + 
-                 (e.status === 200 ? e.status : `<span class="err">${e.status}</span>`) + '</b>' +
-                 '<h3>Headers:</h3>' + headers;
-    return html;
+  return info.fragments.map(e => {
+    const el = document.createElement('p');
+    el.appendChild(document.createElement('h2')).innerText = 'ESI fragment:';
+    el.appendChild(document.createTextNode(e.fragment.replace(/(.*src=").*/i, '$1')));
+    let temp = el.appendChild(document.createElement('a'));
+    temp.innerText = e.fragment.replace(/.*src="([^"]*)".*/i, '$1');
+    temp.setAttribute('href', e.src);
+    el.appendChild(document.createTextNode(e.fragment.replace(/.*src="[^"]*(.*)/i, '$1')));
+    el.appendChild(document.createElement('br'));
+    temp = el.appendChild(document.createElement('b'));
+    if (e.status === 200) {
+      temp.appendChild(document.createTextNode('Status: 200'));
+    } else {
+      temp.appendChild(document.createTextNode('Status: '));
+      const err = temp.appendChild(document.createElement('span'));
+      err.innerText = e.status;
+      err.classList = 'err';
+    }
+    el.appendChild(document.createElement('br'));
+    temp = el.appendChild(document.createTextNode('Load time: ' + e.loadTime + 'ms'));
+    el.appendChild(document.createElement('h3')).innerText = 'Headers';
+    e.headers.split(/[\r\n]+/).forEach(h => {
+      if (h.indexOf('http') < 0) {
+        el.appendChild(document.createTextNode(h));
+      } else {
+        el.appendChild(document.createTextNode(h.replace(/(.*)http.*/i, '$1')));
+        const hl = el.appendChild(document.createElement('a'));
+        const link = h.replace(/.*(http.*)/i, '$1');
+        hl.innerText = link;
+        hl.setAttribute('href', link);
+      }
+      el.appendChild(document.createElement('br'));
+    });
+
+    return el;
   });
-  return '<p>' + htmlArr.join('</p><p>') + '</p>';
 }
 
 const getRequestInfo = (tabid) => {
@@ -148,14 +174,18 @@ chrome.webRequest.onBeforeRequest.addListener(
               src = domainPart + src;
             }
             const xhr = new XMLHttpRequest();
+            const startTime = new Date();
             xhr.open("GET", src, false);
             xhr.send(null);
 
+            const endTime = new Date();
+            const loadTime = endTime - startTime;
             getRequestInfo(details.tabId).fragments.push({
               fragment: e,
               src: src,
               status: xhr.status,
               headers: xhr.getAllResponseHeaders(),
+              loadTime: loadTime,
             });
 
             const docarr = doc.split(e);
@@ -204,7 +234,7 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
     details.requestHeaders.push({name:"Surrogate-Capability",value: ((prefix ? prefix : '') + 'ESI/1.0')});
     return {requestHeaders: details.requestHeaders};
   },
-  {urls: ["<all_urls>"]},
+  {urls: ["<all_urls>"], types: ["main_frame"]},
   ["blocking", "requestHeaders"]
 );
 

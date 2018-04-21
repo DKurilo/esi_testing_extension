@@ -10,7 +10,7 @@ It works only for Firefox because Chrome doesn't support browser.webRequest.filt
 1. esi:include  
 2. esi:comment  
 3. esi:remove  
-4. &gt;!--esi  
+4. &lt;!--esi  
   
 Later will add other ESI options.  
 
@@ -23,6 +23,6 @@ https://www.w3.org/TR/esi-lang
 ## About ##
 
 Author: Dima Kurilo <dkurilo@gmail.com>  
-GitHub: https://github.com/DKurilo/esi-testing-extension  
+GitHub: https://github.com/DKurilo/esi_testing_extension  
 Extension page: https://addons.mozilla.org/en-US/firefox/addon/esi-testing-extension/?src=userprofile  
 Minimal Firefox version: 57.0  

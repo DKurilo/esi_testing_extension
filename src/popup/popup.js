@@ -8,13 +8,16 @@ chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
   document.querySelector('#domain').innerText = prefixes.getDomainName(url);
   document.querySelector('#prefix').value = prefixes.getPrefix(url);
   const info = bgPage.getInfo(currentTab.id);
+  const infoElement = document.querySelector('#info');
+  while(infoElement.firstChild){
+    infoElement.removeChild(infoElement.firstChild);
+  }
   if (info) {
-    document.querySelector('#info').innerHTML = info;
-    document.querySelector('#info').classList = 'hide';
+    info.forEach(i => infoElement.appendChild(i));
+    infoElement.classList = 'hide';
     document.querySelector('#toggle-info').classList = 'show';
   } else {
-    document.querySelector('#info').innerHTML = ''
-    document.querySelector('#info').classList = 'hide';
+    infoElement.classList = 'hide';
     document.querySelector('#toggle-info').classList = 'hide';
   }
   
@@ -31,10 +34,10 @@ chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
   });
 
   document.querySelector('#toggle-info').addEventListener('click', (e) => {
-    if (document.querySelector('#info').classList.contains('hide')) {
-      document.querySelector('#info').classList = 'show';
+    if (infoElement.classList.contains('hide')) {
+      infoElement.classList = 'show';
     } else {
-      document.querySelector('#info').classList = 'hide';
+      infoElement.classList = 'hide';
     }
     e.preventDefault();
   });
